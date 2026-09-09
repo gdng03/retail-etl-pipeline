@@ -1,0 +1,601 @@
+(project-4-de) PS C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline> docker compose config
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"FERNET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"FERNET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"AIRFLOW_UID\" variable is not set. Defaulting to a blank string."
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"FERNET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"FERNET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"FERNET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"FERNET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-07-31T23:22:43+07:00" level=warning msg="The \"FERNET_KEY\" variable is not set. Defaulting to a blank string."
+name: retail-etl-pipeline
+services:
+  airflow-apiserver:
+    command:
+      - api-server
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+      AIRFLOW__API_AUTH__JWT_SECRET: airflow_jwt_secret
+      AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+      POSTGRES_DB: mydb
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCHEMA: retail
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - --fail
+        - http://localhost:8080/api/v2/monitor/health
+      timeout: 10s
+      interval: 30s
+      retries: 5
+      start_period: 30s
+    image: apache/airflow:3.3.0
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "8080"
+        protocol: tcp
+    restart: always
+    user: "50000:0"
+    volumes:
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\dags
+        target: /opt/airflow/dags
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\logs
+        target: /opt/airflow/logs
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\config
+        target: /opt/airflow/config
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\plugins
+        target: /opt/airflow/plugins
+        bind: {}
+  airflow-dag-processor:
+    command:
+      - dag-processor
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+      AIRFLOW__API_AUTH__JWT_SECRET: airflow_jwt_secret
+      AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+      POSTGRES_DB: mydb
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCHEMA: retail
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"
+      timeout: 10s
+      interval: 30s
+      retries: 5
+      start_period: 30s
+    image: apache/airflow:3.3.0
+    networks:
+      default: null
+    restart: always
+    user: "50000:0"
+    volumes:
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\dags
+        target: /opt/airflow/dags
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\logs
+        target: /opt/airflow/logs
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\config
+        target: /opt/airflow/config
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\plugins
+        target: /opt/airflow/plugins
+        bind: {}
+  airflow-init:
+    command:
+      - -c
+      - |
+        if [[ -z "" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
+          echo "If you are on Linux, you SHOULD follow the instructions below to set "
+          echo "AIRFLOW_UID environment variable, otherwise files will be owned by root."
+          echo "For other operating systems you can get rid of the warning with manually created .env file:"
+          echo "    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user"
+          echo
+          export AIRFLOW_UID=$$(id -u)
+        fi
+        one_meg=1048576
+        mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
+        cpus_available=$$(grep -cE 'cpu[0-9]+' /proc/stat)
+        disk_available=$$(df / | tail -1 | awk '{print $$4}')
+        warning_resources="false"
+        if (( mem_available < 4000 )) ; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m"
+          echo "At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))"
+          echo
+          warning_resources="true"
+        fi
+        if (( cpus_available < 2 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m"
+          echo "At least 2 CPUs recommended. You have $${cpus_available}"
+          echo
+          warning_resources="true"
+        fi
+        if (( disk_available < one_meg * 10 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m"
+          echo "At least 10 GBs recommended. You have $$(numfmt --to iec $$((disk_available * 1024 )))"
+          echo
+          warning_resources="true"
+        fi
+        if [[ $${warning_resources} == "true" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: You have not enough resources to run Airflow (see above)!\e[0m"
+          echo "Please follow the instructions to increase amount of resources available:"
+          echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
+          echo
+        fi
+        echo
+        echo "Creating missing opt dirs if missing:"
+        echo
+        mkdir -v -p /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Airflow version:"
+        /entrypoint airflow version
+        echo
+        echo "Files in shared volumes:"
+        echo
+        ls -la /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Running airflow config list to create default config file if missing."
+        echo
+        /entrypoint airflow config list >/dev/null
+        echo
+        echo "Files in shared volumes:"
+        echo
+        ls -la /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Change ownership of files in /opt/airflow to 50000:0"
+        echo
+        chown -R "50000:0" /opt/airflow/
+        echo
+        echo "Change ownership of files in shared volumes to 50000:0"
+        echo
+        chown -v -R "50000:0" /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Files in shared volumes:"
+        echo
+        ls -la /opt/airflow/{logs,dags,plugins,config}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    entrypoint:
+      - /bin/bash
+    environment:
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_PASSWORD: airflow
+      _AIRFLOW_WWW_USER_USERNAME: airflow
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+      AIRFLOW__API_AUTH__JWT_SECRET: airflow_jwt_secret
+      AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+      POSTGRES_DB: mydb
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCHEMA: retail
+      POSTGRES_USER: admin
+    image: apache/airflow:3.3.0
+    networks:
+      default: null
+    user: "0:0"
+    volumes:
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\dags
+        target: /opt/airflow/dags
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\logs
+        target: /opt/airflow/logs
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\config
+        target: /opt/airflow/config
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\plugins
+        target: /opt/airflow/plugins
+        bind: {}
+  airflow-scheduler:
+    command:
+      - scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+      AIRFLOW__API_AUTH__JWT_SECRET: airflow_jwt_secret
+      AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+      POSTGRES_DB: mydb
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCHEMA: retail
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"
+      timeout: 10s
+      interval: 30s
+      retries: 5
+      start_period: 30s
+    image: apache/airflow:3.3.0
+    networks:
+      default: null
+    restart: always
+    user: "50000:0"
+    volumes:
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\dags
+        target: /opt/airflow/dags
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\logs
+        target: /opt/airflow/logs
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\config
+        target: /opt/airflow/config
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\plugins
+        target: /opt/airflow/plugins
+        bind: {}
+  airflow-triggerer:
+    command:
+      - triggerer
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+      AIRFLOW__API_AUTH__JWT_SECRET: airflow_jwt_secret
+      AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+      POSTGRES_DB: mydb
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCHEMA: retail
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"
+      timeout: 10s
+      interval: 30s
+      retries: 5
+      start_period: 30s
+    image: apache/airflow:3.3.0
+    networks:
+      default: null
+    restart: always
+    user: "50000:0"
+    volumes:
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\dags
+        target: /opt/airflow/dags
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\logs
+        target: /opt/airflow/logs
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\config
+        target: /opt/airflow/config
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\plugins
+        target: /opt/airflow/plugins
+        bind: {}
+  airflow-worker:
+    command:
+      - celery
+      - worker
+    depends_on:
+      airflow-apiserver:
+        condition: service_healthy
+        required: true
+      airflow-init:
+        condition: service_completed_successfully
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+      AIRFLOW__API_AUTH__JWT_SECRET: airflow_jwt_secret
+      AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+      DUMB_INIT_SETSID: "0"
+      POSTGRES_DB: mydb
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCHEMA: retail
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"
+      timeout: 10s
+      interval: 30s
+      retries: 5
+      start_period: 30s
+    image: apache/airflow:3.3.0
+    networks:
+      default: null
+    restart: always
+    user: "50000:0"
+    volumes:
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\dags
+        target: /opt/airflow/dags
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\logs
+        target: /opt/airflow/logs
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\config
+        target: /opt/airflow/config
+        bind: {}
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\plugins
+        target: /opt/airflow/plugins
+        bind: {}
+  etl:
+    build:
+      context: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: true
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_PORT: "5432"
+      POSTGRES_SCHEMA: retail
+      POSTGRES_USER: admin
+    networks:
+      default: null
+    restart: "no"
+    volumes:
+      - type: bind
+        source: C:\Users\Administrator\Desktop\UEF\Knowledge_pathway_career\Project_4_DE\retail-etl-pipeline\logs
+        target: /app/logs
+        bind: {}
+  pgadmin:
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: true
+    environment:
+      PGADMIN_DEFAULT_EMAIL: giao@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: giaodang123
+    image: dpage/pgadmin4
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "5050"
+        protocol: tcp
+    restart: always
+    volumes:
+      - type: volume
+        source: pgadmin_data
+        target: /var/lib/pgadmin
+        volume: {}
+  postgres:
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U admin -d mydb
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    image: postgres:17
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5432"
+        protocol: tcp
+    restart: always
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  redis:
+    expose:
+      - "6379"
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 30s
+      interval: 10s
+      retries: 50
+      start_period: 30s
+    image: redis:7.2-bookworm
+    networks:
+      default: null
+    restart: always
+networks:
+  default:
+    name: retail-etl-pipeline_default
+volumes:
+  pgadmin_data:
+    name: retail-etl-pipeline_pgadmin_data
+  postgres_data:
+    name: retail-etl-pipeline_postgres_data
+x-airflow-common:
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  env_file:
+    - .env
+  environment:
+    _PIP_ADDITIONAL_REQUIREMENTS: ""
+    AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+    AIRFLOW__API_AUTH__JWT_SECRET: airflow_jwt_secret
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+  image: apache/airflow:3.3.0
+  user: "50000:0"
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./config:/opt/airflow/config
+    - ./plugins:/opt/airflow/plugins
